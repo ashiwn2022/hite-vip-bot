@@ -11,14 +11,16 @@ from telegram.ext import (
 import sqlite3
 import os
 
-# ================= CONFIG =================
+# CONFIG
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 AFFILIATE_LINK = os.getenv("AFFILIATE_LINK")
 VIP_LINK = os.getenv("VIP_LINK")
 
-# ================= DATABASE =================
+SUPPORT_LINK = "https://t.me/bitxtrading_official"
+
+# DATABASE
 
 db = sqlite3.connect(
     "users.db",
@@ -38,14 +40,13 @@ status TEXT
 
 db.commit()
 
-# ================= START =================
 
-async def start(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
+# MAIN MENU
 
-    kb = [
+def main_menu():
+
+    return InlineKeyboardMarkup([
+
         [
             InlineKeyboardButton(
                 "🚀 Register Now",
@@ -58,22 +59,46 @@ async def start(
                 "✅ Verify Account",
                 callback_data="verify"
             )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "🔄 Restart",
+                callback_data="restart"
+            )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "💬 Contact Support",
+                url=SUPPORT_LINK
+            )
         ]
-    ]
+    ])
+
+
+# START
+
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    context.user_data.clear()
 
     await update.message.reply_text(
 """
 🎯 Welcome To VIP Access 🎯
 
-Follow these steps:
+Complete these steps:
 
 1️⃣ Register using our link
 
-2️⃣ Deposit minimum 💵 $30+
+2️⃣ Deposit minimum 💵 $30
 
-3️⃣ Click Verify
+3️⃣ Verify your account
 
-4️⃣ Submit your Pocket Option UID
+4️⃣ Submit Pocket Option UID
 
 🔥 Unlock:
 
@@ -81,12 +106,13 @@ Follow these steps:
 📈 VIP Signals
 💎 Exclusive Content
 
-👇 Start below
+👇 Begin below
 """,
-reply_markup=InlineKeyboardMarkup(kb)
+reply_markup=main_menu()
 )
 
-# ================= BUTTONS =================
+
+# BUTTONS
 
 async def buttons(
     update: Update,
@@ -96,11 +122,26 @@ async def buttons(
     q = update.callback_query
     await q.answer()
 
+    # RESTART
+
+    if q.data=="restart":
+
+        context.user_data.clear()
+
+        await q.message.reply_text(
+"""
+🔄 Restart Complete
+
+Start again below 👇
+""",
+reply_markup=main_menu()
+)
+
     # VERIFY
 
-    if q.data == "verify":
+    elif q.data=="verify":
 
-        context.user_data["await_uid"] = True
+        context.user_data["await_uid"]=True
 
         await q.message.reply_text(
 """
@@ -116,7 +157,7 @@ Example:
 
     elif q.data.startswith("approve_"):
 
-        uid = q.data.split("_")[1]
+        uid=q.data.split("_")[1]
 
         c.execute(
             "UPDATE users SET status='approved' WHERE telegram_id=?",
@@ -125,6 +166,16 @@ Example:
 
         db.commit()
 
+        buttons = InlineKeyboardMarkup([
+
+            [
+                InlineKeyboardButton(
+                    "💬 Contact Support",
+                    url=SUPPORT_LINK
+                )
+            ]
+        ])
+
         await context.bot.send_message(
 uid,
 f"""
@@ -132,43 +183,61 @@ f"""
 
 ✅ Verification Approved
 
-Welcome to VIP Access 🚀
+🚀 Welcome to VIP Access
 
-You now unlocked:
+Unlocked:
 
 🤖 Trading Bot
-📈 VIP Signals
+📈 Premium Signals
 💎 Exclusive Content
 
-👇 Join below:
+👇 Access below:
 
 {VIP_LINK}
 
-Good luck 🚀💰
-"""
+Good luck 💰🚀
+""",
+reply_markup=buttons
 )
 
         await q.message.reply_text(
-            "✅ User approved"
+            "✅ User Approved"
         )
 
     # DEPOSIT ISSUE
 
     elif q.data.startswith("deposit_"):
 
-        uid = q.data.split("_")[1]
+        uid=q.data.split("_")[1]
 
-        kb = [[
-            InlineKeyboardButton(
-                "🔄 Verify Again",
-                callback_data="verify"
-            )
-        ]]
+        buttons=InlineKeyboardMarkup([
+
+            [
+                InlineKeyboardButton(
+                    "🔄 Verify Again",
+                    callback_data="verify"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    "💬 Contact Support",
+                    url=SUPPORT_LINK
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    "🔄 Restart",
+                    callback_data="restart"
+                )
+            ]
+        ])
 
         await context.bot.send_message(
 uid,
 """
-💰 Registration Complete 🎉
+💰 Registration Completed
 
 We found your account successfully ✅
 
@@ -178,24 +247,25 @@ Deposit minimum:
 
 💵 $30
 
-After completing the deposit:
+After deposit:
 
-Click below and submit your UID again.
+Click Verify Again and submit UID.
 
 🚀 You're one step away.
 """,
-reply_markup=InlineKeyboardMarkup(kb)
+reply_markup=buttons
 )
 
         await q.message.reply_text(
-            "💰 Deposit reminder sent"
+            "💰 Deposit Reminder Sent"
         )
+
 
     # REJECT
 
     elif q.data.startswith("reject_"):
 
-        uid = q.data.split("_")[1]
+        uid=q.data.split("_")[1]
 
         c.execute(
             "UPDATE users SET status='rejected' WHERE telegram_id=?",
@@ -204,45 +274,61 @@ reply_markup=InlineKeyboardMarkup(kb)
 
         db.commit()
 
-        kb = [[
-            InlineKeyboardButton(
-                "🔄 Verify Again",
-                callback_data="verify"
-            )
-        ]]
+        buttons=InlineKeyboardMarkup([
+
+            [
+                InlineKeyboardButton(
+                    "🔄 Verify Again",
+                    callback_data="verify"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    "💬 Contact Support",
+                    url=SUPPORT_LINK
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    "🔄 Restart",
+                    callback_data="restart"
+                )
+            ]
+        ])
 
         await context.bot.send_message(
 uid,
 """
 ❌ Verification Failed
 
-We couldn't find your account in our system.
+We couldn't find your account.
 
 📌 Please register using our official link.
 
-Then click Verify Again and submit UID.
+Then verify again.
 """,
-reply_markup=InlineKeyboardMarkup(kb)
+reply_markup=buttons
 )
 
         await q.message.reply_text(
-            "❌ User rejected"
+            "❌ User Rejected"
         )
 
-# ================= RECEIVE UID =================
+
+# RECEIVE UID
 
 async def receive_uid(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    if context.user_data.get(
-        "await_uid"
-    ):
+    if context.user_data.get("await_uid"):
 
-        uid = update.message.text
+        uid=update.message.text
 
-        user = update.effective_user
+        user=update.effective_user
 
         c.execute(
             "INSERT OR REPLACE INTO users VALUES(?,?,?,?)",
@@ -256,8 +342,7 @@ async def receive_uid(
 
         db.commit()
 
-        kb = [[
-
+        kb=[[
             InlineKeyboardButton(
                 "✅ Approve",
                 callback_data=f"approve_{user.id}"
@@ -272,13 +357,12 @@ async def receive_uid(
                 "❌ Reject",
                 callback_data=f"reject_{user.id}"
             )
-
         ]]
 
-        username = user.username
+        username=user.username
 
         if username is None:
-            username = "No username"
+            username="No username"
 
         await context.bot.send_message(
 ADMIN_ID,
@@ -301,78 +385,81 @@ reply_markup=InlineKeyboardMarkup(kb)
 """
 ⏳ Verification submitted
 
-Admin will review your account shortly 🚀
+Admin will review your account shortly.
+
+Need help?
+
+💬 @bitxtrading_official
 """
 )
 
-        context.user_data[
-            "await_uid"
-        ] = False
+        context.user_data["await_uid"]=False
 
-# ================= PENDING =================
+
+# PENDING
 
 async def pending(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
+    update:Update,
+    context:ContextTypes.DEFAULT_TYPE
 ):
 
-    if update.effective_user.id != ADMIN_ID:
+    if update.effective_user.id!=ADMIN_ID:
         return
 
-    rows = c.execute(
-        """
-        SELECT username,uid
-        FROM users
-        WHERE status='pending'
-        """
-    ).fetchall()
+    rows=c.execute(
+"""
+SELECT username,uid
+FROM users
+WHERE status='pending'
+"""
+).fetchall()
 
-    msg = "\n".join(
-        [
-            f"👤 @{r[0]} | UID: {r[1]}"
-            for r in rows
-        ]
-    )
+    msg="\n".join([
+f"👤 @{r[0]} | UID: {r[1]}"
+for r in rows
+])
 
-    if msg == "":
-        msg = "No pending users"
+    if msg=="":
+
+        msg="No pending users"
 
     await update.message.reply_text(
         msg
     )
 
-# ================= RUN =================
 
-app = Application.builder().token(
-    BOT_TOKEN
+# RUN
+
+app=Application.builder().token(
+BOT_TOKEN
 ).build()
 
 app.add_handler(
-    CommandHandler(
-        "start",
-        start
-    )
+CommandHandler(
+"start",
+start
+)
 )
 
 app.add_handler(
-    CommandHandler(
-        "pending",
-        pending
-    )
+CommandHandler(
+"pending",
+pending
+)
 )
 
 app.add_handler(
-    CallbackQueryHandler(
-        buttons
-    )
+CallbackQueryHandler(
+buttons
+)
 )
 
 app.add_handler(
-    MessageHandler(
-        filters.TEXT &
-        ~filters.COMMAND,
-        receive_uid
-    )
+MessageHandler(
+filters.TEXT &
+~filters.COMMAND,
+receive_uid
+)
 )
 
 app.run_polling()
