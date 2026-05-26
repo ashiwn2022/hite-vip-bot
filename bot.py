@@ -2,10 +2,11 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 import sqlite3
 
-BOT_TOKEN="8902339331:AAH_hgZTGV4HpdJagumzc_ZCM0FrFz9_Coc"
-ADMIN_ID=2044820129
-AFFILIATE_LINK="https://p.finance/en/register/?utm_campaign=45216&utm_source=affiliate&utm_medium=sr&a=8jZdQ2jXqwr5sG&al=1764115&ac=2026alphabravo26&cid=956645&code=YRP176"
-VIP_LINK="https://t.me/+gYb1GUI1KGM3Y2Q0"
+import os
+BOT_TOKEN = os.getenv("8902339331:AAH_hgZTGV4HpdJagumzc_ZCM0FrFz9_Coc")
+ADMIN_ID = int(os.getenv("2044820129"))
+AFFILIATE_LINK = os.getenv("https://p.finance/en/register/?utm_campaign=45216&utm_source=affiliate&utm_medium=sr&a=8jZdQ2jXqwr5sG&al=1764115&ac=2026alphabravo26&cid=956645&code=YRP176")
+VIP_LINK = os.getenv("https://t.me/+gYb1GUI1KGM3Y2Q0")
 
 db=sqlite3.connect("users.db", check_same_thread=False)
 c=db.cursor()
