@@ -10,7 +10,7 @@ AFFILIATE_LINK = os.getenv("AFFILIATE_LINK")
 VIP_LINK = os.getenv("VIP_LINK")
 
 # YOUR IMAGE URL
-WELCOME_IMAGE="https://raw.githubusercontent.com/ashiwn2022/hite-vip-bot/main/YOUR%20UID.png"
+WELCOME_IMAGE="https://raw.githubusercontent.com/ashiwn2022/hite-vip-bot/refs/heads/main/YOUR%20UID.png"
 
 # ===== DATABASE =====
 db=sqlite3.connect("users.db", check_same_thread=False)
